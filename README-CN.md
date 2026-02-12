@@ -1,7 +1,5 @@
 阿里云 PAI-EAS Stable Diffusion WebUI Terraform 模块
 
-================================================ 
-
 # terraform-alicloud-pai-eas-stable-diffusion
 
 [English](https://github.com/alibabacloud-automation/terraform-alicloud-pai-eas-stable-diffusion/blob/main/README.md) | 简体中文
@@ -13,34 +11,25 @@
 该模块创建了在 PAI-EAS 上运行 Stable Diffusion WebUI 的完整基础设施，包括 VPC 网络、存储和计算资源。部署针对 AI 工作负载进行了优化，支持 GPU 和持久化存储。
 
 ```terraform
-data "alicloud_zones" "available" {
-  available_resource_creation = "VSwitch"
-}
-
-data "alicloud_instance_types" "gpu_instances" {
-  availability_zone = data.alicloud_zones.available.zones[0].id
-  cpu_core_count    = 16
-  memory_size       = 62
-  instance_type_family = "ecs.gn6i"
+provider "alicloud" {
+  region = "ap-southeast-1"
 }
 
 module "pai_eas_stable_diffusion" {
   source = "alibabacloud-automation/pai-eas-stable-diffusion/alicloud"
 
   vpc_config = {
-    vpc_name   = "pai-eas-vpc"
     cidr_block = "192.168.0.0/16"
   }
 
   vswitch_config = {
-    vswitch_name = "pai-eas-vswitch"
-    cidr_block   = "192.168.0.0/18"
-    zone_id      = data.alicloud_zones.available.zones[0].id
+    cidr_block = "192.168.0.0/18"
+    zone_id    = "ap-southeast-1c"
   }
 
   pai_service_config = {
     service_name  = "stable-diffusion-webui"
-    instance_type = data.alicloud_instance_types.gpu_instances.instance_types[0].id
+    instance_type = "ecs.gn6i-c16g1.4xlarge"
   }
 }
 ```
@@ -83,25 +72,23 @@ No modules.
 | [alicloud_snat_entry.snat_entry](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/resources/snat_entry) | resource |
 | [alicloud_vpc.vpc](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/resources/vpc) | resource |
 | [alicloud_vswitch.vswitch](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/resources/vswitch) | resource |
-| [alicloud_account.current](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/data-sources/account) | data source |
-| [alicloud_regions.current](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/data-sources/regions) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_eip_config"></a> [eip\_config](#input\_eip\_config) | Configuration for Elastic IP Address. Note: name is mapped to address\_name in the resource. | <pre>object({<br/>    name                 = optional(string, "pai-eas-eip") # Maps to address_name in the resource<br/>    bandwidth            = optional(number, 200)<br/>    internet_charge_type = optional(string, "PayByTraffic")<br/>  })</pre> | `{}` | no |
+| <a name="input_eip_config"></a> [eip\_config](#input\_eip\_config) | Configuration for Elastic IP Address. Note: name is mapped to address\_name in the resource. | <pre>object({<br/>    name                 = optional(string, "pai-eas-eip")<br/>    bandwidth            = optional(number, 200)<br/>    internet_charge_type = optional(string, "PayByTraffic")<br/>  })</pre> | `{}` | no |
 | <a name="input_nas_access_group_config"></a> [nas\_access\_group\_config](#input\_nas\_access\_group\_config) | Configuration for NAS Access Group. | <pre>object({<br/>    access_group_type = optional(string, "Vpc")<br/>    access_group_name = optional(string, "pai-eas-nas-access-group")<br/>    file_system_type  = optional(string, "standard")<br/>  })</pre> | `{}` | no |
 | <a name="input_nas_access_rule_config"></a> [nas\_access\_rule\_config](#input\_nas\_access\_rule\_config) | Configuration for NAS Access Rule. | <pre>object({<br/>    priority         = optional(number, 100)<br/>    user_access_type = optional(string, "no_squash")<br/>    source_cidr_ip   = optional(string, "0.0.0.0/0")<br/>    rw_access_type   = optional(string, "RDWR")<br/>    file_system_type = optional(string, "standard")<br/>  })</pre> | `{}` | no |
 | <a name="input_nas_file_system_config"></a> [nas\_file\_system\_config](#input\_nas\_file\_system\_config) | Configuration for NAS File System. | <pre>object({<br/>    file_system_type = optional(string, "standard")<br/>    storage_type     = optional(string, "Performance")<br/>    protocol_type    = optional(string, "NFS")<br/>    encrypt_type     = optional(number, 0)<br/>  })</pre> | `{}` | no |
 | <a name="input_nas_mount_target_config"></a> [nas\_mount\_target\_config](#input\_nas\_mount\_target\_config) | Configuration for NAS Mount Target. | <pre>object({<br/>    status       = optional(string, "Active")<br/>    network_type = optional(string, "Vpc")<br/>  })</pre> | `{}` | no |
-| <a name="input_nat_gateway_config"></a> [nat\_gateway\_config](#input\_nat\_gateway\_config) | Configuration for NAT Gateway. Note: instance\_charge\_type is mapped to payment\_type in the resource. | <pre>object({<br/>    nat_gateway_name     = optional(string, "pai-eas-nat-gateway")<br/>    instance_charge_type = optional(string, "PostPaid") # Maps to payment_type in the resource<br/>    internet_charge_type = optional(string, "PayByLcu")<br/>    nat_type             = optional(string, "Enhanced")<br/>    network_type         = optional(string, "internet")<br/>    tags                 = optional(map(string), {})<br/>  })</pre> | `{}` | no |
+| <a name="input_nat_gateway_config"></a> [nat\_gateway\_config](#input\_nat\_gateway\_config) | Configuration for NAT Gateway. Note: instance\_charge\_type is mapped to payment\_type in the resource. | <pre>object({<br/>    nat_gateway_name     = optional(string, "pai-eas-nat-gateway")<br/>    payment_type         = optional(string, "PayAsYouGo")<br/>    internet_charge_type = optional(string, "PayByLcu")<br/>    nat_type             = optional(string, "Enhanced")<br/>    network_type         = optional(string, "internet")<br/>    tags                 = optional(map(string), {})<br/>  })</pre> | `{}` | no |
 | <a name="input_pai_service_config"></a> [pai\_service\_config](#input\_pai\_service\_config) | Configuration for PAI-EAS Service. The attributes 'service\_name' and 'instance\_type' are required. | <pre>object({<br/>    service_name      = string<br/>    instance_type     = string<br/>    instance_count    = optional(number, 1)<br/>    cpu               = optional(number, 16)<br/>    gpu               = optional(number, 1)<br/>    memory            = optional(number, 62000)<br/>    type              = optional(string, "SDCluster")<br/>    enable_webservice = optional(string, "true")<br/>    nfs_path          = optional(string, "/")<br/>    resource_type     = optional(string, "model")<br/>    mount_path        = optional(string, "/code/stable-diffusion-webui/data-nas")<br/>    container_image   = optional(string, "eas-registry-vpc.ap-southeast-1.cr.aliyuncs.com/pai-eas/stable-diffusion-webui:4.1")<br/>    container_script  = optional(string, "./webui.sh --listen --port 8000 --skip-version-check --no-hashing --no-download-sd-model --skip-install --api --filebrowser --cluster-status --sd-dynamic-cache --data-dir /code/stable-diffusion-webui/data-nas")<br/>    container_port    = optional(number, 8000)<br/>    meta_type         = optional(string, "SDCluster")<br/>    enable_cache      = optional(bool, true)<br/>    create_timeout    = optional(string, "20m")<br/>  })</pre> | <pre>{<br/>  "instance_type": null,<br/>  "service_name": null<br/>}</pre> | no |
 | <a name="input_security_group_config"></a> [security\_group\_config](#input\_security\_group\_config) | Configuration for Security Group. | <pre>object({<br/>    security_group_name = optional(string, "pai-eas-security-group")<br/>    security_group_type = optional(string, "normal")<br/>  })</pre> | `{}` | no |
 | <a name="input_security_group_rules"></a> [security\_group\_rules](#input\_security\_group\_rules) | Security group rules configuration. | <pre>map(object({<br/>    type        = string<br/>    ip_protocol = string<br/>    nic_type    = string<br/>    policy      = string<br/>    port_range  = string<br/>    priority    = number<br/>    cidr_ip     = string<br/>  }))</pre> | <pre>{<br/>  "allow_http": {<br/>    "cidr_ip": "0.0.0.0/0",<br/>    "ip_protocol": "tcp",<br/>    "nic_type": "intranet",<br/>    "policy": "accept",<br/>    "port_range": "80/80",<br/>    "priority": 1,<br/>    "type": "ingress"<br/>  },<br/>  "allow_https": {<br/>    "cidr_ip": "0.0.0.0/0",<br/>    "ip_protocol": "tcp",<br/>    "nic_type": "intranet",<br/>    "policy": "accept",<br/>    "port_range": "443/443",<br/>    "priority": 1,<br/>    "type": "ingress"<br/>  }<br/>}</pre> | no |
 | <a name="input_snat_entry_config"></a> [snat\_entry\_config](#input\_snat\_entry\_config) | Configuration for SNAT entry. | <pre>object({<br/>    source_cidr = optional(string, "192.168.0.0/18")<br/>  })</pre> | `{}` | no |
-| <a name="input_vpc_config"></a> [vpc\_config](#input\_vpc\_config) | Configuration for VPC. The attribute 'cidr\_block' is required. | <pre>object({<br/>    vpc_name   = optional(string, "pai-eas-vpc")<br/>    cidr_block = string<br/>  })</pre> | <pre>{<br/>  "cidr_block": null<br/>}</pre> | no |
-| <a name="input_vswitch_config"></a> [vswitch\_config](#input\_vswitch\_config) | Configuration for VSwitch. The attributes 'cidr\_block' and 'zone\_id' are required. | <pre>object({<br/>    cidr_block   = string<br/>    zone_id      = string<br/>    vswitch_name = optional(string, "pai-eas-vswitch")<br/>  })</pre> | <pre>{<br/>  "cidr_block": null,<br/>  "zone_id": null<br/>}</pre> | no |
+| <a name="input_vpc_config"></a> [vpc\_config](#input\_vpc\_config) | Configuration for VPC. The attribute 'cidr\_block' is required. | <pre>object({<br/>    vpc_name   = optional(string, "pai-eas-vpc")<br/>    cidr_block = string<br/>  })</pre> | n/a | yes |
+| <a name="input_vswitch_config"></a> [vswitch\_config](#input\_vswitch\_config) | Configuration for VSwitch. The attributes 'cidr\_block' and 'zone\_id' are required. | <pre>object({<br/>    cidr_block   = string<br/>    zone_id      = string<br/>    vswitch_name = optional(string, "pai-eas-vswitch")<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 

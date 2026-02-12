@@ -1,4 +1,4 @@
-# Complete Example for PAI-EAS Module
+# Complete Example
 
 This example demonstrates how to use the PAI-EAS module to deploy a complete Stable Diffusion WebUI service on Alibaba Cloud.
 
